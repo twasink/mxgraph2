@@ -2119,6 +2119,23 @@ var OutlineWindow = function(editorUi, x, y, w, h)
 		return g;
 	};
 	
+	var outlineUpdate = outline.update;
+	outline.update = function()
+	{
+		outlineUpdate.apply(this, arguments);
+				
+		if (this.outline.view.backgroundPageShape != null && this.outline.view.backgroundPageShape.node != null)
+		{
+			var navView = this.outline.view;
+			var page = navView.backgroundPageShape.node;
+			
+			mxUtils.setPrefixedStyle(page.style, 'transform-origin', '0 0');
+			mxUtils.setPrefixedStyle(page.style, 'transform', 'scale(' + navView.cssScale + ')' +
+				'translate(' + navView.cssTranslate.x + 'px,' + navView.cssTranslate.y + 'px)');
+			console.log('page transform assigned', 'scale(' + navView.cssScale +
+				')translate(' + navView.cssTranslate.x + 'px,' + navView.cssTranslate.y + 'px)');
+		}
+	};
 	function update()
 	{
 		outline.outline.pageScale = graph.pageScale;
@@ -2134,7 +2151,7 @@ var OutlineWindow = function(editorUi, x, y, w, h)
 			outline.outline.view.backgroundPageShape.fill = graph.view.backgroundPageShape.fill;
 		}
 		
-		outline.outline.refresh();
+		//outline.outline.refresh();
 	};
 
 	outline.init(div);

@@ -177,9 +177,15 @@ mxOutline.prototype.forceVmlHandles = document.documentMode == 8;
  */
 mxOutline.prototype.createGraph = function(container)
 {
-	var graph = new mxGraph(container, this.source.getModel(), this.graphRenderHint, this.source.getStylesheet());
+	var graph = new mxGraph(container, null, this.graphRenderHint, this.source.getStylesheet());
 	graph.foldingEnabled = false;
 	graph.autoScroll = false;
+	
+	graph.view.cssScale = 1;
+	graph.view.cssTranslate = new mxPoint(0, 0);
+	
+	graph.cellRenderer.minSvgStrokeWidth = 10;
+	graph.cellRenderer.antiAlias = false;
 	
 	return graph;
 };
@@ -320,7 +326,8 @@ mxOutline.prototype.init = function(container)
 	this.sizer.node.style.display = this.selectionBorder.node.style.display;
 	this.selectionBorder.node.style.cursor = 'move';
 
-	this.update(false);
+	this.outline.model = this.source.getModel();
+	this.update(true);
 };
 
 /**
@@ -461,17 +468,18 @@ mxOutline.prototype.update = function(revalidate)
 		
 		var outlineScale = Math.min(availableWidth / completeWidth, availableHeight / completeHeight);
 		var scale = (isNaN(outlineScale)) ? this.minScale : Math.max(this.minScale, outlineScale);
-
+		
 		if (scale > 0)
 		{
-			if (this.outline.getView().scale != scale)
+			var navView = this.outline.getView();
+			navView.cssScale = Math.round(scale * 100) / 100;
+			
+			if (navView.scale != scale)
 			{
-				this.outline.getView().scale = scale;
+				//this.outline.getView().scale = scale;
 				revalidate = true;
 			}
 		
-			var navView = this.outline.getView();
-			
 			if (navView.currentRoot != this.source.getView().currentRoot)
 			{
 				navView.setCurrentRoot(this.source.getView().currentRoot);
@@ -497,19 +505,21 @@ mxOutline.prototype.update = function(revalidate)
 			{
 				ty = ty - unscaledGraphBounds.y;
 			}
+
+			navView.cssTranslate = new mxPoint(Math.round(tx * 100) / 100, Math.round(ty * 100) / 100);
 			
 			if (navView.translate.x != tx || navView.translate.y != ty)
 			{
-				navView.translate.x = tx;
-				navView.translate.y = ty;
+//				navView.translate.x = tx;
+//				navView.translate.y = ty;
 				revalidate = true;
 			}
 		
 			// Prepares local variables for computations
-			var t2 = navView.translate;
+			var t2 = new mxPoint(tx, ty);
 			scale = this.source.getView().scale;
-			var scale2 = scale / navView.scale;
-			var scale3 = 1.0 / navView.scale;
+			var scale2 = scale / navView.cssScale;
+			var scale3 = 1.0 / navView.cssScale;
 			var container = this.source.container;
 			
 			// Updates the bounds of the viewrect in the navigation
@@ -520,8 +530,8 @@ mxOutline.prototype.update = function(revalidate)
 				(container.clientHeight / scale2));
 			
 			// Adds the scrollbar offset to the finder
-			this.bounds.x += this.source.container.scrollLeft * navView.scale / scale;
-			this.bounds.y += this.source.container.scrollTop * navView.scale / scale;
+			this.bounds.x += this.source.container.scrollLeft * navView.cssScale;
+			this.bounds.y += this.source.container.scrollTop * navView.cssScale;
 			
 			var b = this.selectionBorder.bounds;
 			
@@ -549,7 +559,13 @@ mxOutline.prototype.update = function(revalidate)
 
 			if (revalidate)
 			{
-				this.outline.view.revalidate();
+				var g = this.outline.view.getDrawPane();
+				g.setAttribute('transformOrigin', '0 0');
+				g.setAttribute('transform', 'scale(' + navView.cssScale + ',' + navView.cssScale + ')' +
+					'translate(' + navView.cssTranslate.x + ',' + navView.cssTranslate.y + ')');
+				
+				//this.outline.view.revalidate();
+				this.outline.view.validate();
 			}
 		}
 	}
@@ -608,7 +624,7 @@ mxOutline.prototype.mouseMove = function(sender, me)
 		if (!this.zoom)
 		{
 			// Previews the panning on the source graph
-			var scale = this.outline.getView().scale;
+			var scale = this.outline.getView().cssScale;
 			bounds = new mxRectangle(this.bounds.x + dx,
 				this.bounds.y + dy, this.bounds.width, this.bounds.height);
 			this.selectionBorder.bounds = bounds;
