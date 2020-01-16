@@ -1147,7 +1147,7 @@ mxEdgeHandler.prototype.getPreviewTerminalState = function(me)
 		this.marker.process(me);
 		var state = this.marker.getValidState();
 		
-		if (state != null && this.graph.isCellLocked(state.cell))
+		if (state != null && !this.isCellEnabled(state.cell))
 		{
 			this.marker.reset();
 		}
@@ -1487,7 +1487,7 @@ mxEdgeHandler.prototype.mouseMove = function(sender, me)
 				}
 			}
 			
-			if (terminalState != null && this.graph.isCellLocked(terminalState.cell))
+			if (terminalState != null && !this.isCellEnabled(terminalState.cell))
 			{
 				terminalState = null;
 				this.marker.reset();
@@ -2449,4 +2449,14 @@ mxEdgeHandler.prototype.destroy = function()
 	this.bends = null;
 	
 	this.removeHint();
+};
+
+/**
+ * Function: isCellEnabled
+ * 
+ * Returns false if the given cell does not allow new connections to be created.
+ */
+mxEdgeHandler.prototype.isCellEnabled = function(cell)
+{
+	return true;
 };

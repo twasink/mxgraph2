@@ -1176,7 +1176,7 @@ mxConnectionHandler.prototype.updateCurrentState = function(me, point)
 /**
  * Function: isCellEnabled
  * 
- * Returns true if the given cell does not allow new connections to be created.
+ * Returns false if the given cell does not allow new connections to be created.
  */
 mxConnectionHandler.prototype.isCellEnabled = function(cell)
 {
